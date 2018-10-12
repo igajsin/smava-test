@@ -112,6 +112,7 @@ resource "aws_instance" "web" {
 
   tags = {
     tier = "front"
+    name = "web"
   }
 
   connection {
@@ -120,7 +121,7 @@ resource "aws_instance" "web" {
   }
 
   provisioner "local-exec" {
-    command = "echo web: ${aws_instance.web.public_ip} > ip_address.txt"
+    command = "./mk-inventory.sh web ${aws_instance.web.public_ip}"
   }
 
   provisioner "remote-exec" {
@@ -129,6 +130,31 @@ resource "aws_instance" "web" {
       "sudo sudo yum install nginx -y",
       "sudo /etc/init.d/nginx start",
     ]
+  }
+}
+
+resource "aws_instance" "backend" {
+  ami                    = "ami-9fc39c74"
+  instance_type          = "t2.micro"
+  key_name               = "${var.key_name}"
+  vpc_security_group_ids = ["${aws_security_group.sg_ssh_http.id}"]
+
+  #TODO: maybe create a dedicate subnet for a front-tier
+  # now it uses LoadBalancer's one.
+  subnet_id = "${aws_subnet.web.id}"
+
+  tags = {
+    tier = "back"
+    name = "hw"
+  }
+
+  connection {
+    user = "ec2-user" # The default username for our AMI
+    type = "ssh"
+  }
+
+  provisioner "local-exec" {
+    command = "./mk-inventory.sh back ${aws_instance.backend.public_ip}"
   }
 }
 
