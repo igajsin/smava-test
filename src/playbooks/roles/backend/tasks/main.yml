@@ -3,10 +3,14 @@
     name: '*'
     state: latest
 
-- name: yum update
+- name: install python-pip
   yum:
-    name: docker-ce
+    name: python27-pip
     state: latest
+
+- name: pip install docker
+  pip:
+    name: docker-py
 
 - name: docker run the image
   docker_container:

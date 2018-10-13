@@ -44,6 +44,14 @@ resource "aws_security_group" "elb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # SSH access from anywhere
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # outbound internet access
   egress {
     from_port   = 0
@@ -68,12 +76,12 @@ resource "aws_security_group" "sg_ssh_http" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTP access from the VPC
+  # HTTP access from anywhere
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # outbound internet access
@@ -137,7 +145,7 @@ resource "aws_instance" "backend" {
   ami                    = "ami-9fc39c74"
   instance_type          = "t2.micro"
   key_name               = "${var.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.sg_ssh_http.id}"]
+  vpc_security_group_ids = ["${aws_security_group.sg_ssh_http.id}", "${aws_security_group.backend.id}"]
 
   #TODO: maybe create a dedicate subnet for a front-tier
   # now it uses LoadBalancer's one.
@@ -164,9 +172,10 @@ resource "aws_eip" "ip" {
 
 # A security group to access
 # the instances over SSH, HTTP and ICMP
-resource "aws_security_group" "default" {
-  name        = "eip_example"
-  description = "Used in the terraform"
+resource "aws_security_group" "backend" {
+  name        = "backend_sg"
+  description = "Used in the terraform for the backend tier"
+  vpc_id      = "${aws_vpc.smava.id}"
 
   # SSH access from anywhere
   ingress {
@@ -178,8 +187,8 @@ resource "aws_security_group" "default" {
 
   # HTTP access from anywhere
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

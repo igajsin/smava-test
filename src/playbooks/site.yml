@@ -1,5 +1,12 @@
 ---
-name: prepare backend
-hosts: backend
-roles:
-  - backend
+- name: prepare backend
+  hosts: back
+  become: yes
+  roles:
+    - backend
+
+- name: configure frontend
+  hosts: web
+  become: yes
+  roles:
+    - web
