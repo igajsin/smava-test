@@ -1,0 +1,16 @@
+#!/bin/sh
+
+(
+	cd src/terraform && terraform apply \
+	  || echo Can not run terraform.
+
+) && (
+	cd src/playbooks && ansible-playbook ./site.yml \
+	  || echo Can not run ansible-playbook
+) && (
+    IP=$(cd src/terraform && terraform output web_eip)
+    NAME=$(cd src/terraform && terraform output web_name)
+    echo Setup is done
+    echo You can reach the app either by $IP
+    echo or by $NAME
+    )

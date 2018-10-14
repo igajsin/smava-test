@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd src/terraform && terraform destroy \
+  || echo there is no a terraform dir

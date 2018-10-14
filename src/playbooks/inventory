@@ -1,2 +1,2 @@
-web ansible_host=10.0.1.88 ansible_user=ec2-user backend_ip=10.0.2.109
-back ansible_host=10.0.2.109 ansible_user=ec2-user
+web ansible_host=10.0.1.17 ansible_user=ec2-user backend_ip=10.0.2.180
+back ansible_host=10.0.2.180 ansible_user=ec2-user
