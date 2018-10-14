@@ -24,8 +24,41 @@ resource "aws_subnet" "web" {
 
 resource "aws_eip" "ip" {
   instance = "${aws_instance.web.id}"
+}
 
-  provisioner "local-exec" {
-    command = "sed -e s/'web.*'/'web ansible_host=${aws_eip.ip.public_ip} ansible_user=ec2-user backend_ip=${aws_instance.backend.private_ip}'/ -i ../playbooks/inventory"
+# Create a subnet to lauch the back-end into
+resource "aws_subnet" "back" {
+  vpc_id                  = "${aws_vpc.smava.id}"
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = false
+}
+
+# Elastic IP for the NAT gateway
+resource "aws_eip" "nat" {}
+
+# A gateway to provide internet-access to the backend app
+resource "aws_nat_gateway" "nat" {
+  allocation_id = "${aws_eip.nat.id}"
+  subnet_id     = "${aws_subnet.web.id}"
+
+  tags {
+    Name = "gw NAT"
   }
+
+  depends_on = ["aws_internet_gateway.smava"]
+}
+
+resource "aws_route_table" "back" {
+  vpc_id = "${aws_vpc.smava.id}"
+}
+
+resource "aws_route" "back" {
+  route_table_id         = "${aws_route_table.back.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = "${aws_nat_gateway.nat.id}"
+}
+
+resource "aws_route_table_association" "back2back" {
+  subnet_id      = "${aws_subnet.back.id}"
+  route_table_id = "${aws_route_table.back.id}"
 }
